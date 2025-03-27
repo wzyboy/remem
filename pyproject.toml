@@ -4,8 +4,28 @@ version = "0.1.0"
 description = "A simple tool to chunk, embed, and recall memory — from diaries to chat logs."
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "chromadb>=0.6.3",
+    "click>=8.1.8",
+    "sentence-transformers>=4.0.1",
+    "tiktoken>=0.9.0",
+    "torch>=2.6.0",
+    "tqdm>=4.67.1",
+]
 
 [build-system]
 requires = ['hatchling']
 build-backend = 'hatchling.build'
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cu124", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+torchvision = [
+  { index = "pytorch-cu124", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
