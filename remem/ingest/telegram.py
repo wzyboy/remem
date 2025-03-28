@@ -1,3 +1,29 @@
+#!/usr/bin/env python
+
+'''
+Telegram History Dump Ingester
+
+This script processes Telegram chat export files in `.jsonl` format, as
+produced by the `telegram-history-dump` tool:
+
+https://github.com/tvdstaaij/telegram-history-dump
+
+It recursively discovers all `.jsonl` files within the specified files or
+directories. For each file, it reads message events and groups them into "chat
+sessions" based on a configurable time gap (default: 2 hours). A new session is
+created whenever the time between two consecutive messages exceeds this
+threshold.
+
+Each session contains:
+- A name derived from the participants or group title
+- A start and end datetime
+- The full text content of the session, including media annotations
+
+The script offers two CLI commands for previewing the processed results:
+- `group`: Prints the grouped chat sessions
+- `chunk`: Prints chunked versions of the sessions for downstream processing
+'''
+
 import re
 import json
 import datetime
@@ -141,7 +167,7 @@ class ChatSession:
 
 
 def iter_chat_session(jsonl: Path, time_gap: datetime.timedelta = datetime.timedelta(hours=2)):
-    '''Read JSONL file and group messages into chat sessions'''
+    '''Read .jsonl file and group messages into chat sessions'''
     with open(jsonl, encoding='utf-8') as f:
         dt_cursor = None
         buffer = []
@@ -165,7 +191,7 @@ def iter_chat_session(jsonl: Path, time_gap: datetime.timedelta = datetime.timed
 
 
 def iter_chunk(jsonl: Path) -> Iterable[chunker.Chunk]:
-    '''Read JSONL file and return chunked chat sessions'''
+    '''Read .jsonl file and return chunked chat sessions'''
     items = (
         (s.metadata(), s.content)
         for s in iter_chat_session(jsonl)
