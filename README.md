@@ -10,3 +10,7 @@ A simple tool to **chunk**, **embed**, and **recall** memory — from diaries to
 - 📦 **Embed** using an embedding model
 - 🧠 **Store** in a vector database (ChromaDB)
 - 🔎 **Retrieve** contextually relevant chunks for LLM input
+
+## Example
+
+See [`diary.py`](./examples/diary.py) for how to use `remem` to ingest and query diary-like content.
