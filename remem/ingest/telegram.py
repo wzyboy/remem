@@ -29,7 +29,7 @@ from collections.abc import Iterable
 
 import click
 from remem import chunker
-from remem.ingest import utils
+from remem import utils
 
 
 @dataclasses.dataclass(order=True)

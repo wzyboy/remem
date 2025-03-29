@@ -10,6 +10,7 @@ from chromadb import QueryResult
 from chromadb.config import Settings
 
 from remem import chunker
+from remem import utils
 
 
 _cached_setup = None
@@ -52,12 +53,11 @@ def _get_setup():
 
 
 def add(chunks: Iterable[chunker.Chunk], batch_size: int = 32) -> int:
-    '''Add chunks into ChromaDB in batch'''
+    '''Add chunks into ChromaDB with progress bar'''
     model, collection = _get_setup()
     chunks = list(chunks)
     with tqdm(total=len(chunks)) as pbar:
-        for i in range(0, len(chunks), batch_size):
-            batch = chunks[i:i + batch_size]
+        for batch in utils.batched(chunks, batch_size):
             texts = [chunk.text for chunk in batch]
             embeddings = model.encode(texts, normalize_embeddings=True)
 
@@ -84,9 +84,19 @@ def query(keyword: str, instruction: str = '', n_results: int = 5) -> QueryResul
 
 def update(chunks: Iterable[chunker.Chunk]) -> int:
     '''Add new chunks to ChromaDB, skipping existing ones'''
-    chunks1, chunks2 = itertools.tee(chunks)
     _, collection = _get_setup()
-    results = collection.get(ids=[c.id for c in chunks1])
-    existing_ids = set(results['ids'])
+
+    chunks1, chunks2 = itertools.tee(chunks)
+    del chunks
+    # We cannot retrieve too many IDs at the same time or we get
+    # "sqlite3.OperationalError: too many SQL variables" exception.
+    existing_ids = set()
+    for chunk_batch in utils.batched(chunks1, 128):
+        ids = [c.id for c in chunk_batch]
+        results = collection.get(ids=ids)
+        existing_ids.update(results['ids'])
+
+    # Add new chunks
     new_chunks = (c for c in chunks2 if c.id not in existing_ids)
     return add(new_chunks)
+
