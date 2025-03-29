@@ -35,6 +35,8 @@ from remem.ingest import utils
 
 @dataclasses.dataclass(order=True)
 class ChatMessage:
+    id: str
+    reply_id: str | None
     dt: datetime.datetime
     from_name: str
     to_name: str
@@ -46,6 +48,8 @@ class ChatMessage:
         assert event.get('event') == 'message', 'Not a message'
         assert event.get('text') or event.get('media'), 'No text/media in message'
         return cls(
+            id=event['id'],
+            reply_id=event.get('reply_id'),
             dt=datetime.datetime.fromtimestamp(event['date'], tz=datetime.UTC),
             from_name=cls._extract_name(event['from']),
             to_name=cls._extract_name(event['to']),
@@ -126,10 +130,9 @@ class ChatSession:
 
     @classmethod
     def from_messages(cls, _messages: Iterable[ChatMessage]):
+        # NOTE: this list might be modified in-place.
         messages = sorted(_messages)
         assert messages, 'No messages'
-
-        content = '\n'.join(str(msg) for msg in messages)
 
         # The messages are from the same file, so they are either all private
         # messages or all group messages. For private chats, use names of both
@@ -138,12 +141,17 @@ class ChatSession:
         _peer_names = set()
         _group_name = None
         for msg in messages:
+            if reply_id := msg.reply_id:
+                reply_text = cls._get_reply_text(reply_id, messages)
+                msg.text = f'{reply_text} {msg.text}'
             if not _group_name:
                 _peer_names.add(msg.from_name)
                 _peer_names.add(msg.to_name)
                 if msg.group_name:
                     _group_name = msg.group_name
+
         name = ' & '.join(sorted(_peer_names)) if not _group_name else _group_name
+        content = '\n'.join(str(msg) for msg in messages)
 
         return cls(
             name=name,
@@ -151,6 +159,15 @@ class ChatSession:
             dt_end=messages[-1].dt,
             content=content,
         )
+
+    @staticmethod
+    def _get_reply_text(reply_id: str, messages: list[ChatMessage]):
+        for msg in messages:
+            if msg.id == reply_id:
+                text = f'{msg.text[:10]}...' if len(msg.text) > 10 else msg.text
+                return f'[REPLY: {text}]'
+        # Cannot find the replied message in this session
+        return '[REPLY]'
 
     def metadata(self) -> dict[str, str]:
         return {
