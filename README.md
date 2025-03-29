@@ -15,8 +15,8 @@ A simple tool to **chunk**, **embed**, and **recall** memory — from diaries to
 
 ### Telegram
 
-For Telegram chat history files produced by the [telegram-history-dump](https://github.com/tvdstaaij/telegram-history-dump).
+See [remem.ingest.telegram](./remem/ingest/telegram.py). For Telegram chat history files produced by the [telegram-history-dump](https://github.com/tvdstaaij/telegram-history-dump).
 
 ### WordPress
 
-For WordPress posts in MySQL database.
+See [remem.ingest.wordpress](./remem/ingest/wordpress.py). For WordPress posts in MySQL database.
