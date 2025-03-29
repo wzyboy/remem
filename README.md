@@ -11,6 +11,12 @@ A simple tool to **chunk**, **embed**, and **recall** memory — from diaries to
 - 🧠 **Store** in a vector database (ChromaDB)
 - 🔎 **Retrieve** contextually relevant chunks for LLM input
 
-## Example
+## Ingesters
 
-See [`diary.py`](./examples/diary.py) for how to use `remem` to ingest and query diary-like content.
+### Telegram
+
+For Telegram chat history files produced by the [telegram-history-dump](https://github.com/tvdstaaij/telegram-history-dump).
+
+### WordPress
+
+For WordPress posts in MySQL database.

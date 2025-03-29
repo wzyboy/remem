@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 '''
-Telegram History Dump Ingester
+Ingester for Telegram history dump.
 
 This script processes Telegram chat export files in `.jsonl` format, as
 produced by the `telegram-history-dump` tool:
@@ -18,10 +18,6 @@ Each session contains:
 - A name derived from the participants or group title
 - A start and end datetime
 - The full text content of the session, including media annotations
-
-The script offers two CLI commands for previewing the processed results:
-- `group`: Prints the grouped chat sessions
-- `chunk`: Prints chunked versions of the sessions for downstream processing
 '''
 
 import re
@@ -205,11 +201,11 @@ def cli():
 
 
 @cli.command()
-@click.argument('paths', type=click.Path(path_type=Path, exists=True), nargs=-1)
-def group(paths: Iterable[Path]):
-    '''Preview chat sessions'''
+@click.argument('path', type=click.Path(path_type=Path, exists=True))
+def preview_chats(path: Iterable[Path]):
+    '''Preview chat sessions from file or directory'''
     def iter_line():
-        for file in utils.iter_files(paths, '.jsonl'):
+        for file in utils.iter_files(path, '.jsonl'):
             for session in iter_chat_session(file):
                 yield str(session)
                 yield '\n-----\n'
@@ -217,11 +213,11 @@ def group(paths: Iterable[Path]):
 
 
 @cli.command()
-@click.argument('paths', type=click.Path(path_type=Path, exists=True), nargs=-1)
-def chunk(paths: Iterable[Path]):
-    '''Preview chunked chat sessions'''
+@click.argument('path', type=click.Path(path_type=Path, exists=True))
+def preview_chunks(path: Iterable[Path]):
+    '''Preview chunked chat sessions from file or directory'''
     def iter_line():
-        for file in utils.iter_files(paths, '.jsonl'):
+        for file in utils.iter_files(path, '.jsonl'):
             for chunk in iter_chunk(file):
                 yield pformat(chunk)
                 yield '\n-----\n'

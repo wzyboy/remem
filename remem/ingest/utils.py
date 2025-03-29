@@ -3,8 +3,10 @@ from pathlib import Path
 from collections.abc import Iterable
 
 
-def iter_files(paths: Iterable[Path], suffix: str) -> Iterable[Path]:
+def iter_files(paths: Path | Iterable[Path], suffix: str) -> Iterable[Path]:
     '''Find all files with the given suffix in paths recursively'''
+    if isinstance(paths, Path):
+        paths = [paths]
     def gen():
         for path in paths:
             if path.is_dir():
