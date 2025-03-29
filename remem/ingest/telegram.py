@@ -119,9 +119,8 @@ class ChatMessage:
                 case _:
                     mtext = f'[UNKNOWN MEDIA TYPE: {mtype}]'
 
-        # Combine text and media and normalize all whitespace
-        full_text = f'{text} {mtext}' if text and mtext else (mtext or text)
-        return full_text
+        # Combine text and media placeholder
+        return f'{text} {mtext}' if text and mtext else (mtext or text)
 
 
 @dataclasses.dataclass
@@ -169,7 +168,7 @@ class ChatSession:
                 lines.append(f'{msg.from_name}:')
                 last_speaker = msg.from_name
 
-            lines.extend(f'\t{line.strip()}' for line in text.splitlines())
+            lines.extend(f'\t{line.strip()}' for line in text.splitlines() if line.strip())
 
         content = '\n'.join(lines)
 
