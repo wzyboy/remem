@@ -37,6 +37,7 @@ from remem.ingest import utils
 class ChatMessage:
     id: str
     reply_id: str | None
+    reply_text: str | None
     dt: datetime.datetime
     from_name: str
     to_name: str
@@ -50,6 +51,7 @@ class ChatMessage:
         return cls(
             id=event['id'],
             reply_id=event.get('reply_id'),
+            reply_text=None,  # this is populated with ChatSession
             dt=datetime.datetime.fromtimestamp(event['date'], tz=datetime.UTC),
             from_name=cls._extract_name(event['from']),
             to_name=cls._extract_name(event['to']),
@@ -58,6 +60,9 @@ class ChatMessage:
         )
 
     def __str__(self) -> str:
+        if self.reply_text:
+            quote = f'{self.reply_text[:10]}...' if len(self.reply_text) > 10 else self.reply_text
+            return f'{self.from_name}: [REPLY: {quote}] {self.text}'
         return f'{self.from_name}: {self.text}'
 
     @staticmethod
@@ -133,6 +138,7 @@ class ChatSession:
         # NOTE: this list might be modified in-place.
         messages = sorted(_messages)
         assert messages, 'No messages'
+        msg_id_map = {msg.id: msg for msg in messages}
 
         # The messages are from the same file, so they are either all private
         # messages or all group messages. For private chats, use names of both
@@ -141,9 +147,7 @@ class ChatSession:
         _peer_names = set()
         _group_name = None
         for msg in messages:
-            if reply_id := msg.reply_id:
-                reply_text = cls._get_reply_text(reply_id, messages)
-                msg.text = f'{reply_text} {msg.text}'
+            cls._attach_reply(msg, msg_id_map)
             if not _group_name:
                 _peer_names.add(msg.from_name)
                 _peer_names.add(msg.to_name)
@@ -161,13 +165,10 @@ class ChatSession:
         )
 
     @staticmethod
-    def _get_reply_text(reply_id: str, messages: list[ChatMessage]):
-        for msg in messages:
-            if msg.id == reply_id:
-                text = f'{msg.text[:10]}...' if len(msg.text) > 10 else msg.text
-                return f'[REPLY: {text}]'
-        # Cannot find the replied message in this session
-        return '[REPLY]'
+    def _attach_reply(current_msg: ChatMessage, msg_id_map: dict[str, ChatMessage]):
+        if reply_id := current_msg.reply_id:
+            if reply_msg := msg_id_map.get(reply_id):
+                current_msg.reply_text = reply_msg.text
 
     def metadata(self) -> dict[str, str]:
         return {
