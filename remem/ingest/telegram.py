@@ -25,7 +25,6 @@ import json
 import datetime
 import dataclasses
 from pathlib import Path
-from pprint import pformat
 from collections.abc import Iterable
 
 import click
@@ -60,9 +59,6 @@ class ChatMessage:
         )
 
     def __str__(self) -> str:
-        if self.reply_text:
-            quote = f'{self.reply_text[:10]}...' if len(self.reply_text) > 10 else self.reply_text
-            return f'{self.from_name}: [REPLY: {quote}] {self.text}'
         return f'{self.from_name}: {self.text}'
 
     @staticmethod
@@ -155,7 +151,26 @@ class ChatSession:
                     _group_name = msg.group_name
 
         name = ' & '.join(sorted(_peer_names)) if not _group_name else _group_name
-        content = '\n'.join(str(msg) for msg in messages)
+
+        # Group consecutive messages by speaker with indentation
+        lines = []
+        last_speaker = None
+
+        for msg in messages:
+            prefix = f'{msg.from_name}:'
+            if msg.reply_text:
+                quote = f'{msg.reply_text[:10]}...' if len(msg.reply_text) > 10 else msg.reply_text
+                text = f'↩[{quote}] {msg.text}'
+            else:
+                text = msg.text
+
+            if msg.from_name != last_speaker:
+                lines.append(f'{prefix}\n\t{text}')
+                last_speaker = msg.from_name
+            else:
+                lines.append(f'\t{text}')
+
+        content = '\n'.join(lines)
 
         return cls(
             name=name,
@@ -177,7 +192,7 @@ class ChatSession:
         }
 
     def __str__(self) -> str:
-        return f'{self.dt_start.date().isoformat()} {self.name}\n{self.content}'
+        return f'{self.dt_start.date().isoformat()} | {self.name}\n{self.content}'
 
 
 def iter_chat_session(jsonl: Path, time_gap: datetime.timedelta = datetime.timedelta(hours=2)):
@@ -210,7 +225,7 @@ def iter_chunk(jsonl: Path) -> Iterable[chunker.Chunk]:
         (s.metadata(), s.content)
         for s in iter_chat_session(jsonl)
     )
-    yield from chunker.iter_chunk(items)
+    yield from chunker.iter_chunk(items, overlap=5)
 
 
 @click.group()
@@ -237,8 +252,9 @@ def preview_chunks(path: Iterable[Path]):
     def iter_line():
         for file in utils.iter_files(path, '.jsonl'):
             for chunk in iter_chunk(file):
-                yield pformat(chunk)
+                yield str(chunk)
                 yield '\n-----\n'
+
     click.echo_via_pager(iter_line())
 
 

@@ -19,6 +19,10 @@ class Chunk:
         hash = hashlib.sha1(hash_data.encode('utf-8')).hexdigest()
         return cls(hash, metadata, text)
 
+    def __str__(self) -> str:
+        token = len_token(self.text)
+        return f'id={self.id} metadata={self.metadata!r} {token=}\n{self.text}'
+
 
 IngestItem = tuple[dict[str, str], str]
 
@@ -34,7 +38,7 @@ def iter_chunk(data: Iterable[IngestItem], max_len: int = 500, overlap: int = 1)
     seen_ids = set()
     for md, text in data:
         # Split into paragraphs
-        paragraphs = [p.strip() for p in text.split('\n') if p.strip()]
+        paragraphs = [p.rstrip() for p in text.split('\n') if p.strip()]
         buffer = []
         total_len = 0
 

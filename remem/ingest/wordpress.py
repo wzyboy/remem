@@ -12,7 +12,6 @@ import re
 import html
 import datetime
 import dataclasses
-from pprint import pformat
 from collections.abc import Iterable
 
 import click
@@ -102,7 +101,7 @@ def preview(obj):
     """Preview chunked WordPress posts"""
     def iter_line():
         for chunk in iter_chunk(obj['conn']):
-            yield pformat(chunk)
+            yield str(chunk)
             yield '\n-----\n'
 
     click.echo_via_pager(iter_line())
