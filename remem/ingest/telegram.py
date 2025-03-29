@@ -20,7 +20,6 @@ Each session contains:
 - The full text content of the session, including media annotations
 '''
 
-import re
 import json
 import datetime
 import dataclasses
@@ -119,7 +118,7 @@ class ChatMessage:
 
         # Combine text and media and normalize all whitespace
         full_text = f'{text} {mtext}' if text and mtext else (mtext or text)
-        return re.sub(r'\s+', ' ', full_text).strip()
+        return full_text
 
 
 @dataclasses.dataclass
@@ -157,7 +156,6 @@ class ChatSession:
         last_speaker = None
 
         for msg in messages:
-            prefix = f'{msg.from_name}:'
             if msg.reply_text:
                 quote = f'{msg.reply_text[:10]}...' if len(msg.reply_text) > 10 else msg.reply_text
                 text = f'↩[{quote}] {msg.text}'
@@ -165,10 +163,10 @@ class ChatSession:
                 text = msg.text
 
             if msg.from_name != last_speaker:
-                lines.append(f'{prefix}\n\t{text}')
+                lines.append(f'{msg.from_name}:')
                 last_speaker = msg.from_name
-            else:
-                lines.append(f'\t{text}')
+
+            lines.extend(f'\t{line.rstrip()}' for line in text.splitlines())
 
         content = '\n'.join(lines)
 
