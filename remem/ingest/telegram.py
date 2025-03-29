@@ -89,7 +89,10 @@ class ChatMessage:
                         mtext += f' {caption}'
 
                 case 'webpage':
-                    parts = [str(media.get(k, '')).strip() for k in ('title', 'description', 'author')]
+                    parts = [
+                        chunker.truncate_by_tokens(str(media.get(k, '')), 20)
+                        for k in ('title', 'description', 'author')
+                    ]
                     parts = [p for p in parts if p]
                     mtext = '[WEBPAGE] ' + ' - '.join(parts) if parts else '[WEBPAGE]'
 
@@ -157,7 +160,7 @@ class ChatSession:
 
         for msg in messages:
             if msg.reply_text:
-                quote = f'{msg.reply_text[:10]}...' if len(msg.reply_text) > 10 else msg.reply_text
+                quote = chunker.truncate_by_tokens(msg.reply_text, 10)
                 text = f'↩[{quote}] {msg.text}'
             else:
                 text = msg.text
@@ -166,7 +169,7 @@ class ChatSession:
                 lines.append(f'{msg.from_name}:')
                 last_speaker = msg.from_name
 
-            lines.extend(f'\t{line.rstrip()}' for line in text.splitlines())
+            lines.extend(f'\t{line.strip()}' for line in text.splitlines())
 
         content = '\n'.join(lines)
 

@@ -33,6 +33,14 @@ def len_token(text: str, model: str = 'gpt-4o'):
     return len(encoder.encode(text))
 
 
+def truncate_by_tokens(text: str, max_tokens: int, model: str = 'gpt-4o', ellipsis: str = '…') -> str:
+    encoder = tiktoken.encoding_for_model(model)
+    tokens = encoder.encode(text)
+    if len(tokens) <= max_tokens:
+        return text
+    return encoder.decode(tokens[:max_tokens]) + ellipsis
+
+
 seen_ids = set()
 
 
