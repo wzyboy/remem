@@ -33,9 +33,11 @@ def len_token(text: str, model: str = 'gpt-4o'):
     return len(encoder.encode(text))
 
 
+seen_ids = set()
+
+
 def iter_chunk(data: Iterable[IngestItem], max_len: int = 500, overlap: int = 1) -> Iterable[Chunk]:
     '''Take metadta + text and yield paragraph-aware chunks'''
-    seen_ids = set()
     for md, text in data:
         # Split into paragraphs
         paragraphs = [p.rstrip() for p in text.split('\n') if p.strip()]

@@ -1,5 +1,6 @@
 '''Interface to ChromaDB'''
 
+import itertools
 from collections.abc import Iterable
 
 import click
@@ -83,8 +84,9 @@ def query(keyword: str, instruction: str = '', n_results: int = 5) -> QueryResul
 
 def update(chunks: Iterable[chunker.Chunk]) -> int:
     '''Add new chunks to ChromaDB, skipping existing ones'''
+    chunks1, chunks2 = itertools.tee(chunks)
     _, collection = _get_setup()
-    results = collection.get(ids=[c.id for c in chunks])
+    results = collection.get(ids=[c.id for c in chunks1])
     existing_ids = set(results['ids'])
-    new_chunks = (c for c in chunks if c.id not in existing_ids)
+    new_chunks = (c for c in chunks2 if c.id not in existing_ids)
     return add(new_chunks)
