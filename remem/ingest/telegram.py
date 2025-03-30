@@ -189,6 +189,7 @@ class ChatSession:
         return {
             'name': self.name,
             'date': self.dt_start.date().isoformat(),
+            'timestamp': self.dt_start.timestamp(),
         }
 
     def __str__(self) -> str:
