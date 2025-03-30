@@ -14,9 +14,19 @@ from remem import utils
 
 
 _cached_setup = None
+default_db_path = 'chroma'
 
 
-def setup(model_name: str, collection_name: str, db_path: str = 'chroma'):
+def get_client(db_path: str = default_db_path):
+    return chromadb.PersistentClient(db_path, settings=Settings(anonymized_telemetry=False))
+
+
+def get_collection(collection_name: str, db_path: str = default_db_path):
+    chroma_client = get_client(db_path)
+    return chroma_client.get_or_create_collection(collection_name)
+
+
+def setup(model_name: str, collection_name: str, db_path: str = default_db_path):
     global _cached_setup
     if _cached_setup:
         return _cached_setup
@@ -37,8 +47,7 @@ def setup(model_name: str, collection_name: str, db_path: str = 'chroma'):
     click.echo(f'Loading embedding model on {device.upper()}...')
 
     model = SentenceTransformer(model_name, device=device)
-    chroma_client = chromadb.PersistentClient(db_path, settings=Settings(anonymized_telemetry=False))
-    collection = chroma_client.get_or_create_collection(collection_name)
+    collection = get_collection(collection_name, db_path)
 
     result = (model, collection)
 
