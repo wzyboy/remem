@@ -27,9 +27,10 @@ class Post:
     title: str
     content: str
 
-    def metadata(self) -> dict[str, str]:
+    def metadata(self) -> chunker.Metadata:
         return {
             'date': self.dt.date().isoformat(),
+            'timestamp': self.dt.timestamp(),
             'title': self.title,
         }
 

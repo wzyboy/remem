@@ -35,7 +35,7 @@ def iter_post() -> Iterable[Post]:
 
 
 # Transform each Post into (metadata, text) tuple for ingestion.
-def iter_ingestion_item() -> Iterable[tuple[dict, str]]:
+def iter_ingestion_item() -> Iterable[chunker.IngestItem]:
     for post in iter_post():
         metadata = {
             'id': str(post.id),

@@ -3,18 +3,25 @@
 import hashlib
 import dataclasses
 from collections.abc import Iterable
+from collections.abc import Mapping
+from typing import Union
 
 import tiktoken
+
+
+# This is the metadata types supported by ChromaDB
+Metadata = Mapping[str, Union[str, int, float, bool]]
+IngestItem = tuple[Metadata, str]
 
 
 @dataclasses.dataclass
 class Chunk:
     id: str
-    metadata: dict
+    metadata: Metadata
     text: str
 
     @classmethod
-    def make(cls, metadata: dict, text: str):
+    def make(cls, metadata: Metadata, text: str):
         hash_data = f'{metadata}_{text}'
         hash = hashlib.sha1(hash_data.encode('utf-8')).hexdigest()
         return cls(hash, metadata, text)
@@ -22,9 +29,6 @@ class Chunk:
     def __str__(self) -> str:
         token = len_token(self.text)
         return f'id={self.id} metadata={self.metadata!r} {token=}\n{self.text}'
-
-
-IngestItem = tuple[dict[str, str], str]
 
 
 def len_token(text: str, model: str = 'gpt-4o'):

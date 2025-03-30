@@ -185,7 +185,7 @@ class ChatSession:
             if reply_msg := msg_id_map.get(reply_id):
                 current_msg.reply_text = reply_msg.text
 
-    def metadata(self) -> dict[str, str]:
+    def metadata(self) -> chunker.Metadata:
         return {
             'name': self.name,
             'date': self.dt_start.date().isoformat(),
