@@ -2,31 +2,36 @@
 
 import itertools
 from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 import click
-import chromadb
 from tqdm import tqdm
-from chromadb import QueryResult
-from chromadb.config import Settings
-
 from remem import chunker
 from remem import utils
+
+if TYPE_CHECKING:
+    from chromadb import Collection
+    from chromadb import QueryResult
+    from chromadb.api import ClientAPI
+    from sentence_transformers import SentenceTransformer
 
 
 _cached_setup = None
 default_db_path = 'chroma'
 
 
-def get_client(db_path: str = default_db_path):
+def get_client(db_path: str = default_db_path) -> 'ClientAPI':
+    import chromadb
+    from chromadb.config import Settings
     return chromadb.PersistentClient(db_path, settings=Settings(anonymized_telemetry=False))
 
 
-def get_collection(collection_name: str, db_path: str = default_db_path):
+def get_collection(collection_name: str, db_path: str = default_db_path) -> 'Collection':
     chroma_client = get_client(db_path)
     return chroma_client.get_or_create_collection(collection_name)
 
 
-def setup(model_name: str, collection_name: str, db_path: str = default_db_path):
+def setup(model_name: str, collection_name: str, db_path: str = default_db_path) -> tuple['SentenceTransformer', 'Collection']:
     global _cached_setup
     if _cached_setup:
         return _cached_setup
@@ -80,7 +85,7 @@ def add(chunks: Iterable[chunker.Chunk], batch_size: int = 32) -> int:
     return len(chunks)
 
 
-def query(keyword: str, instruction: str = '', n_results: int = 5) -> QueryResult:
+def query(keyword: str, instruction: str = '', n_results: int = 5) -> 'QueryResult':
     '''Query documents from ChromaDB with keyword'''
     model, collection = _get_setup()
     query_vec = model.encode(instruction + keyword, normalize_embeddings=True).tolist()
@@ -108,4 +113,3 @@ def update(chunks: Iterable[chunker.Chunk]) -> int:
     # Add new chunks
     new_chunks = (c for c in chunks2 if c.id not in existing_ids)
     return add(new_chunks)
-
