@@ -67,7 +67,7 @@ def add(cs: ChromaSetup, chunks: Iterable[chunker.Chunk], batch_size: int = 32) 
     with tqdm(total=len(chunks)) as pbar:
         for batch in utils.batched(chunks, batch_size):
             texts = [chunk.text for chunk in batch]
-            embeddings = cs.model.encode(texts, normalize_embeddings=True)
+            embeddings = cs.model.encode(texts, normalize_embeddings=True, show_progress_bar=False)
 
             cs.collection.add(
                 documents=texts,
@@ -81,7 +81,7 @@ def add(cs: ChromaSetup, chunks: Iterable[chunker.Chunk], batch_size: int = 32) 
 
 def query(cs: ChromaSetup, keyword: str, n_results: int = 5) -> 'QueryResult':
     '''Query documents from ChromaDB with keyword'''
-    query_vec = cs.model.encode(cs.retrieval_instruction + keyword, normalize_embeddings=True).tolist()
+    query_vec = cs.model.encode(cs.retrieval_instruction + keyword, normalize_embeddings=True, show_progress_bar=False).tolist()
     results = cs.collection.query(
         query_embeddings=[query_vec],
         n_results=n_results,
