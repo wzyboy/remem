@@ -1,10 +1,10 @@
 '''Interface to ChromaDB'''
 
+import logging
 import itertools
 from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
-import click
 from tqdm import tqdm
 from remem import chunker
 from remem import utils
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 
 _cached_setup = None
 default_db_path = 'chroma'
+log = logging.getLogger(__name__)
 
 
 def get_client(db_path: str = default_db_path) -> 'ClientAPI':
@@ -49,7 +50,7 @@ def setup(model_name: str, collection_name: str, db_path: str = default_db_path)
     use_gpu = torch.cuda.is_available() and get_vram_gb() >= 3.5
     device = 'cuda' if use_gpu else 'cpu'
 
-    click.echo(f'Loading embedding model on {device.upper()}...')
+    log.debug(f'Loading embedding model on {device.upper()}...')
 
     model = SentenceTransformer(model_name, device=device)
     collection = get_collection(collection_name, db_path)
