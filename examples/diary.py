@@ -2,8 +2,6 @@
 
 import datetime
 import dataclasses
-from pprint import pprint
-from dateutil.parser import isoparse
 from collections.abc import Iterable
 
 import click
@@ -23,7 +21,7 @@ class Post:
 
 # Generate 100 demo diary posts
 def iter_post() -> Iterable[Post]:
-    start_date = isoparse('2025-01-01').date()
+    start_date = datetime.date(2025, 1, 1)
     for i in range(100):
         yield Post(
             id=i,
@@ -49,25 +47,16 @@ def iter_ingestion_item() -> Iterable[chunker.IngestItem]:
 @click.group()
 def cli():
     """A simple CLI for testing remem with diary-like posts."""
-    # Initialize the embedding model and ChromaDB collection
-    chroma.setup(model_name='all-MiniLM-L6-v2', collection_name='diary', db_path='alice_diary')
 
 
 @cli.command()
 def ingest():
     """Ingests sample diary posts into the vector database."""
+    cs = chroma.get_setup(model_name='all-MiniLM-L6-v2', collection_name='diary', db_path='alice_diary')
     items = iter_ingestion_item()
     chunks = chunker.iter_chunk(items)
-    chroma.add(chunks)
+    chroma.add(cs, chunks)
     click.echo('Ingested 100 posts into the vector DB.')
-
-
-@cli.command()
-@click.argument('keyword')
-def query(keyword: str):
-    """Query the vector database with a keyword."""
-    results = chroma.query(keyword)
-    pprint(results)
 
 
 if __name__ == '__main__':
