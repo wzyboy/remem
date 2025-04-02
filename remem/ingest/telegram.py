@@ -24,6 +24,7 @@ import json
 import datetime
 import dataclasses
 from pathlib import Path
+from operator import attrgetter
 from collections.abc import Iterable
 
 import click
@@ -133,7 +134,7 @@ class ChatSession:
     @classmethod
     def from_messages(cls, _messages: Iterable[ChatMessage]):
         # NOTE: this list might be modified in-place.
-        messages = sorted(_messages)
+        messages = sorted(_messages, key=attrgetter('dt'))
         assert messages, 'No messages'
         msg_id_map = {msg.id: msg for msg in messages}
 
