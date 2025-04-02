@@ -32,7 +32,7 @@ from remem import chunker
 from remem import utils
 
 
-@dataclasses.dataclass(order=True)
+@dataclasses.dataclass
 class ChatMessage:
     id: str
     reply_id: str | None
